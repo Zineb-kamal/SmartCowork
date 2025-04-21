@@ -1,0 +1,86 @@
+services:
+  # SQL Server
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2019-latest
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=P@ssw0rd2024
+      - MSSQL_PID=Developer
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+    networks:
+      - smartcowork-network
+
+  # Service User
+  user-service:
+    build:
+      context: ./SmartCowork.Services.User
+      dockerfile: Dockerfile
+    ports:
+      - "5043:80"
+    depends_on:
+      - sqlserver
+    environment:
+      - ASPNETCORE_URLS=http://+:80
+      - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=SmartCoworkUserDB;User Id=sa;Password=P@ssw0rd2024;TrustServerCertificate=True;MultipleActiveResultSets=true
+    networks:
+      - smartcowork-network
+    restart: unless-stopped
+
+  # Service Space
+  space-service:
+    build:
+      context: ./SmartCowork.Services.Space
+      dockerfile: Dockerfile
+    ports:
+      - "5285:80"
+    depends_on:
+      - sqlserver
+    environment:
+      - ASPNETCORE_URLS=http://+:80
+      - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=SmartCoworkSpaceDB;User Id=sa;Password=P@ssw0rd2024;TrustServerCertificate=True;MultipleActiveResultSets=true
+    networks:
+      - smartcowork-network
+    restart: unless-stopped
+
+  # Service Booking
+  booking-service:
+    build:
+      context: ./SmartCowork.Services.Booking
+      dockerfile: Dockerfile
+    ports:
+      - "5036:80"
+    depends_on:
+      - sqlserver
+    environment:
+      - ASPNETCORE_URLS=http://+:80
+      - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=SmartCoworkBookingDB;User Id=sa;Password=P@ssw0rd2024;TrustServerCertificate=True;MultipleActiveResultSets=true
+    networks:
+      - smartcowork-network
+    restart: unless-stopped
+
+  # API Gateway
+  api-gateway:
+    build:
+      context: ./SmartCowork.ApiGateway
+      dockerfile: Dockerfile
+    ports:
+      - "5072:80"
+    environment:
+      - ASPNETCORE_URLS=http://+:80
+    depends_on:
+      - user-service
+      - space-service
+      - booking-service
+    networks:
+      - smartcowork-network
+    restart: unless-stopped
+
+volumes:
+  sqlserver_data:
+
+networks:
+  smartcowork-network:
+    driver: bridge

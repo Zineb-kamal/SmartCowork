@@ -1,0 +1,6 @@
+@SmartCowork.Services.Space_HostAddress = http://localhost:5285
+
+GET {{SmartCowork.Services.Space_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

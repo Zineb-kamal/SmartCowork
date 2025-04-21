@@ -1,0 +1,416 @@
+{
+  "Routes": [
+    // Routes du Billing Service
+    {
+      "DownstreamPathTemplate": "/api/invoice",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5223
+        }
+      ],
+      "UpstreamPathTemplate": "/api/invoice",
+      "UpstreamHttpMethod": [ "Get", "Post" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "SwaggerKey": "billing"
+    },
+    {
+      "DownstreamPathTemplate": "/api/invoice/{id}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5223
+        }
+      ],
+      "UpstreamPathTemplate": "/api/invoice/{id}",
+      "UpstreamHttpMethod": [ "Get", "Put", "Delete" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "SwaggerKey": "billing"
+    },
+    {
+      "DownstreamPathTemplate": "/api/invoice/user/{userId}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5223
+        }
+      ],
+      "UpstreamPathTemplate": "/api/invoice/user/{userId}",
+      "UpstreamHttpMethod": [ "Get" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "SwaggerKey": "billing"
+    },
+    {
+      "DownstreamPathTemplate": "/api/payment",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5223
+        }
+      ],
+      "UpstreamPathTemplate": "/api/payment",
+      "UpstreamHttpMethod": [ "Post" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "SwaggerKey": "billing"
+    },
+
+    // Swagger pour Billing
+    {
+      "DownstreamPathTemplate": "/swagger/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5223
+        }
+      ],
+      "UpstreamPathTemplate": "/swagger/billing/{everything}",
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE", "OPTIONS" ]
+    },
+    // Routes du Space Service
+    {
+      "DownstreamPathTemplate": "/api/space",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          //"Host": "space-service",
+          "Host": "localhost",
+          "Port": 5285
+        }
+      ],
+      "UpstreamPathTemplate": "/api/space",
+      "UpstreamHttpMethod": [ "Get", "Post" ],
+      "SwaggerKey": "space"
+    },
+    {
+      "DownstreamPathTemplate": "/api/space/{id}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          //"Host": "space-service",
+          "Host": "localhost",
+          "Port": 5285
+        }
+      ],
+      "UpstreamPathTemplate": "/api/space/{id}",
+      "UpstreamHttpMethod": [ "Get", "Put", "Delete" ],
+      "SwaggerKey": "space"
+    },
+    {
+      "DownstreamPathTemplate": "/api/space/available",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          //"Host": "space-service",
+          "Host": "localhost",
+          "Port": 5285
+        }
+      ],
+      "UpstreamPathTemplate": "/api/space/available",
+      "UpstreamHttpMethod": [ "Get" ],
+      "SwaggerKey": "space"
+    },
+    {
+      "DownstreamPathTemplate": "/api/space/type/{type}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5285
+        }
+      ],
+      "UpstreamPathTemplate": "/api/space/type/{type}",
+      "UpstreamHttpMethod": [ "Get" ],
+      "SwaggerKey": "space"
+    },
+
+    // Routes du Booking Service
+    {
+      "DownstreamPathTemplate": "/api/booking",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          //"Host": "booking-service",
+          "Host": "localhost",
+          "Port": 5036
+        }
+      ],
+      "UpstreamPathTemplate": "/api/booking",
+      "UpstreamHttpMethod": [ "Get", "Post" ],
+      "SwaggerKey": "booking"
+    },
+    {
+      "DownstreamPathTemplate": "/api/booking/{id}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          //"Host": "booking-service",
+          "Host": "localhost",
+          "Port": 5036
+        }
+      ],
+      "UpstreamPathTemplate": "/api/booking/{id}",
+      "UpstreamHttpMethod": [ "Get", "Put", "Delete" ],
+      "SwaggerKey": "booking"
+    },
+    {
+      "DownstreamPathTemplate": "/api/booking/user/{userId}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          //"Host": "booking-service",
+          "Host": "localhost",
+          "Port": 5036
+        }
+      ],
+      "UpstreamPathTemplate": "/api/booking/user/{userId}",
+      "UpstreamHttpMethod": [ "Get" ],
+      "SwaggerKey": "booking"
+    },
+    {
+      "DownstreamPathTemplate": "/api/booking/space/{spaceId}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          //"Host": "booking-service",
+          "Host": "localhost",
+          "Port": 5036
+        }
+      ],
+      "UpstreamPathTemplate": "/api/booking/space/{spaceId}",
+      "UpstreamHttpMethod": [ "Get" ],
+      "SwaggerKey": "booking"
+    },
+    {
+      "DownstreamPathTemplate": "/api/booking/check-availability",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          //"Host": "booking-service",
+          "Host": "localhost",
+          "Port": 5036
+        }
+      ],
+      "UpstreamPathTemplate": "/api/booking/check-availability",
+      "UpstreamHttpMethod": [ "Get" ],
+      "SwaggerKey": "booking"
+    },
+
+    // Routes du User Service
+    {
+      "DownstreamPathTemplate": "/api/user/register",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          //"Host": "user-service", //for docker
+          "Host": "localhost",
+          "Port": 5043
+        }
+      ],
+      "UpstreamPathTemplate": "/api/user/register",
+      "UpstreamHttpMethod": [ "Post" ],
+      "SwaggerKey": "user"
+    },
+    {
+      "DownstreamPathTemplate": "/api/user/login",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          //"Host": "user-service",
+          "Host": "localhost",
+          "Port": 5043
+        }
+      ],
+      "UpstreamPathTemplate": "/api/user/login",
+      "UpstreamHttpMethod": [ "Post" ],
+      "SwaggerKey": "user"
+    },
+    {
+      "DownstreamPathTemplate": "/api/user/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          //"Host": "user-service",
+          "Host": "localhost",
+          "Port": 5043
+        }
+      ],
+      "UpstreamPathTemplate": "/api/user/{everything}",
+      "UpstreamHttpMethod": [ "Get", "Put", "Delete" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "SwaggerKey": "user"
+    },
+    {
+      "DownstreamPathTemplate": "/api/user",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5043
+        }
+      ],
+      "UpstreamPathTemplate": "/api/user",
+      "UpstreamHttpMethod": [ "Get" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "SwaggerKey": "user"
+    },
+    {
+      "DownstreamPathTemplate": "/api/user/{id}/password",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5043
+        }
+      ],
+      "UpstreamPathTemplate": "/api/user/{id}/password",
+      "UpstreamHttpMethod": [ "Put" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "SwaggerKey": "user"
+    },
+    {
+      "DownstreamPathTemplate": "/api/user/{id}/role",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5043
+        }
+      ],
+      "UpstreamPathTemplate": "/api/user/{id}/role",
+      "UpstreamHttpMethod": [ "Put" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "SwaggerKey": "user"
+    },
+    {
+      "DownstreamPathTemplate": "/api/user/{id}/status",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5043
+        }
+      ],
+      "UpstreamPathTemplate": "/api/user/{id}/status",
+      "UpstreamHttpMethod": [ "Put" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "SwaggerKey": "user"
+    },
+    // Routes Swagger pour chaque service
+    {
+      "DownstreamPathTemplate": "/swagger/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "space-service",
+          "Port": 5285
+        }
+      ],
+      "UpstreamPathTemplate": "/swagger/space/{everything}",
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE", "OPTIONS" ]
+    },
+    {
+      "DownstreamPathTemplate": "/swagger/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "booking-service",
+          "Port": 5036
+        }
+      ],
+      "UpstreamPathTemplate": "/swagger/booking/{everything}",
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE", "OPTIONS" ]
+    },
+    {
+      "DownstreamPathTemplate": "/swagger/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "user-service",
+          "Port": 5043
+        }
+      ],
+      "UpstreamPathTemplate": "/swagger/user/{everything}",
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE", "OPTIONS" ]
+    }
+  ],
+  "SwaggerEndPoints": [
+    {
+      "Key": "space",
+      "Config": [
+        {
+          "Name": "Space API",
+          "Version": "v1",
+          "Url": "http://space-service:5285/swagger/v1/swagger.json"
+        }
+      ]
+    },
+    {
+      "Key": "booking",
+      "Config": [
+        {
+          "Name": "Booking API",
+          "Version": "v1",
+          "Url": "http://booking-service:5036/swagger/v1/swagger.json"
+        }
+      ]
+    },
+    {
+      "Key": "user",
+      "Config": [
+        {
+          "Name": "User API",
+          "Version": "v1",
+          "Url": "http://user-service:5043/swagger/v1/swagger.json"
+        }
+      ]
+    }
+  ],
+  "GlobalConfiguration": {
+    "BaseUrl": "http://localhost:5072",
+    "RequestIdKey": "RequestId",
+    "AdministrationPath": "/administration",
+    "HttpHandlerOptions": {
+      "UseTracing": true,
+      "AllowAutoRedirect": false,
+      "UseCookieContainer": true
+    },
+    "RateLimitOptions": {
+      "EnableRateLimiting": true,
+      "Period": "1s",
+      "PeriodTimespan": 1,
+      "Limit": 10
+    }
+  }
+}

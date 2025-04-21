@@ -1,0 +1,6 @@
+@SmartCowork.Services.Billing_HostAddress = http://localhost:5223
+
+GET {{SmartCowork.Services.Billing_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
