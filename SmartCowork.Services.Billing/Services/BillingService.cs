@@ -7,10 +7,9 @@ using SmartCowork.Services.Billing.Messages;
 using SmartCowork.Services.Billing.Models;
 using SmartCowork.Services.Billing.Models.DTOs;
 using SmartCowork.Services.Billing.Repository;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using QuestPDF.Fluent;
+using QuestPDF.Helpers;
+using QuestPDF.Infrastructure;
 
 namespace SmartCowork.Services.Billing.Services
 {
@@ -20,17 +19,20 @@ namespace SmartCowork.Services.Billing.Services
         private readonly IMapper _mapper;
         private readonly ILogger<BillingService> _logger;
         private readonly IRabbitMQProducer _rabbitMQProducer;
+        private readonly IUserService _userService;
 
         public BillingService(
             IInvoiceRepository invoiceRepository,
             IMapper mapper,
             ILogger<BillingService> logger,
-            IRabbitMQProducer rabbitMQProducer)
+            IRabbitMQProducer rabbitMQProducer,
+            IUserService userService)
         {
             _invoiceRepository = invoiceRepository;
             _mapper = mapper;
             _logger = logger;
             _rabbitMQProducer = rabbitMQProducer;
+            _userService = userService;
         }
 
         #region Méthodes CRUD Standard
@@ -520,7 +522,205 @@ namespace SmartCowork.Services.Billing.Services
                 throw;
             }
         }
+        public async Task<byte[]> GenerateInvoicePdfAsync(Guid invoiceId)
+        {
+          
+            var invoice = await _invoiceRepository.GetInvoiceByIdAsync(invoiceId);
+            if (invoice == null)
+                return null;
 
+            _logger.LogInformation($"[PDF] Début de génération pour facture {invoiceId}");
+            _logger.LogInformation($"[PDF] UserId: {invoice.UserId}");
+            _logger.LogInformation($"[PDF] Nombre d'éléments: {invoice.Items?.Count ?? 0}");
+            // Récupérer les données utilisateur
+            var user = await _userService.GetUserByIdAsync(invoice.UserId);
+            var userName = user?.FullName ?? "Client";
+
+            // Enrichir les éléments de facture avec les données de réservation
+            if (invoice.Items != null && invoice.Items.Any())
+            {
+                foreach (var item in invoice.Items)
+                {
+                    // Si le BookingId est présent, récupérer les détails de la réservation
+                    if (item.BookingId != Guid.Empty)
+                    {
+                        //try
+                        //{
+                        //    var booking = await _bookingService.GetBookingByIdAsync(item.BookingId);
+                        //    if (booking != null)
+                        //    {
+                        //        // Enrichir la description avec les vraies dates
+                        //        item.Description = $"Réservation de {booking.SpaceName ?? "l'espace"} du " +
+                        //                          $"{booking.StartDateTime:dd/MM/yyyy HH:mm} au " +
+                        //                          $"{booking.EndDateTime:dd/MM/yyyy HH:mm}";
+
+                        //        // Recalculer la quantité si nécessaire (en heures)
+                        //        if (item.Quantity == 0)
+                        //        {
+                        //            var duration = (booking.EndDateTime - booking.StartDateTime).TotalHours;
+                        //            item.Quantity = (decimal)duration;
+
+                        //            // Si le prix unitaire est aussi à 0, essayer de le récupérer
+                        //            if (item.UnitPrice == 0 && booking.HourlyRate.HasValue)
+                        //            {
+                        //                item.UnitPrice = booking.HourlyRate.Value;
+                        //                item.TotalPrice = item.Quantity * item.UnitPrice;
+                        //            }
+                        //        }
+                        //    }
+                        //}
+                        //catch (Exception ex)
+                        //{
+                        //    _logger.LogWarning(ex, $"Impossible de récupérer les détails de la réservation {item.BookingId}");
+                        //    // Continuer malgré l'erreur
+                        //}
+                    }
+                }
+            }
+
+            QuestPDF.Settings.License = LicenseType.Community;
+
+            var pdfBytes = QuestPDF.Fluent.Document.Create(container =>
+            {
+                container.Page(page =>
+                {
+                    page.Size(PageSizes.A4);
+                    page.Margin(50);
+                    page.Header().Element(header =>
+                    {
+                        header.Row(row =>
+                        {
+                            row.RelativeItem().Column(col =>
+                            {
+                                col.Item().Text("SmartCowork").FontSize(20).Bold();
+                                col.Item().Text("Espaces de travail intelligents").FontSize(12);
+                            });
+
+                            row.RelativeItem().AlignRight().Text($"Facture #{invoice.Id}").Bold().FontSize(20);
+                        });
+                    });
+
+                    page.Content().Element(content =>
+                    {
+                        content.PaddingVertical(20).Column(column =>
+                        {
+                            // Informations client et facture
+                            column.Item().Table(table =>
+                            {
+                                table.ColumnsDefinition(cols =>
+                                {
+                                    cols.RelativeColumn();
+                                    cols.RelativeColumn();
+                                });
+
+                                table.Cell().Text("Informations client").Bold();
+                                table.Cell().Text("Détails de la facture").Bold();
+
+                                table.Cell().Column(col =>
+                                {
+                                    col.Item().Text($"Nom: {userName}");
+                                    if (user != null)
+                                    {
+                                        col.Item().Text($"Email: {user.Email}");
+                                        //if (!string.IsNullOrEmpty(user.PhoneNumber))
+                                        //    col.Item().Text($"Téléphone: {user.PhoneNumber}");
+                                    }
+                                });
+
+                                table.Cell().Column(col =>
+                                {
+                                    col.Item().Text($"Numéro: INV-{invoice.Id.ToString().Substring(0, 8).ToUpper()}");
+                                    col.Item().Text($"Date d'émission: {invoice.CreatedDate:dd/MM/yyyy}");
+                                    col.Item().Text($"Date d'échéance: {invoice.DueDate:dd/MM/yyyy}");
+                                    col.Item().Text($"Statut: {invoice.Status}");
+                                });
+                            });
+
+                            column.Item().PaddingTop(20).LineHorizontal(1).LineColor(Colors.Grey.Medium);
+
+                            // Table des éléments de facture
+                            column.Item().PaddingTop(20).Table(table =>
+                            {
+                                // Définir les colonnes
+                                table.ColumnsDefinition(columns =>
+                                {
+                                    columns.RelativeColumn(3);    // Description
+                                    columns.RelativeColumn();     // Quantité
+                                    columns.RelativeColumn();     // Prix unitaire
+                                    columns.RelativeColumn();     // Total
+                                });
+
+                                // En-têtes
+                                table.Header(header =>
+                                {
+                                    header.Cell().Background(Colors.Grey.Lighten3).Padding(5).Text("Description").Bold();
+                                    header.Cell().Background(Colors.Grey.Lighten3).Padding(5).Text("Quantité").Bold();
+                                    header.Cell().Background(Colors.Grey.Lighten3).Padding(5).Text("Prix unitaire").Bold();
+                                    header.Cell().Background(Colors.Grey.Lighten3).Padding(5).Text("Total").Bold();
+                                });
+
+                                // Contenu des lignes
+                                if (invoice.Items != null && invoice.Items.Any())
+                                {
+                                    foreach (var item in invoice.Items)
+                                    {
+                                        table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten2).Padding(5).Text(item.Description);
+                                        table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten2).Padding(5).Text(item.Quantity.ToString("0.##") + " h");
+                                        table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten2).Padding(5).Text($"{item.UnitPrice:0.##} €");
+                                        table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten2).Padding(5).Text($"{item.TotalPrice:0.##} €");
+                                    }
+                                }
+                                else
+                                {
+                                    table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten2).Padding(5).Text("Aucun élément");
+                                    table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten2).Padding(5).Text("-");
+                                    table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten2).Padding(5).Text("-");
+                                    table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten2).Padding(5).Text("-");
+                                }
+                            });
+
+                            // Résumé de la facture
+                            column.Item().PaddingTop(10).AlignRight().Table(table =>
+                            {
+                                table.ColumnsDefinition(cols =>
+                                {
+                                    cols.RelativeColumn();
+                                    cols.ConstantColumn(100);
+                                });
+
+                                table.Cell().Text("Total HT:").Bold();
+                                table.Cell().Text($"{invoice.TotalAmount:0.##} €");
+
+                                table.Cell().Text("TVA (20%):").Bold();
+                                table.Cell().Text($"{invoice.TotalAmount * 0.2m:0.##} €");
+
+                                table.Cell().Text("Total TTC:").Bold();
+                                table.Cell().Text($"{invoice.TotalAmount * 1.2m:0.##} €").Bold();
+                            });
+
+                            // Instructions de paiement
+                            column.Item().PaddingTop(20).Background(Colors.Grey.Lighten4).Padding(10).Column(col =>
+                            {
+                                col.Item().Text("Instructions de paiement").Bold();
+                                col.Item().Text("Veuillez effectuer le paiement avant la date d'échéance.");
+                                col.Item().Text("Coordonnées bancaires: IBAN: FR76 XXXX XXXX XXXX XXXX XXXX XXX");
+                            });
+                        });
+                    });
+
+                    page.Footer().AlignCenter().Text(x =>
+                    {
+                        x.Span("© 2025 SmartCowork - ");
+                        x.Span("Page ").FontSize(10);
+                        x.CurrentPageNumber().FontSize(10);
+                        x.Span(" sur ").FontSize(10);
+                        x.TotalPages().FontSize(10);
+                    });
+                });
+            }).GeneratePdf();
+
+            return pdfBytes;
+        }
         #endregion
     }
 

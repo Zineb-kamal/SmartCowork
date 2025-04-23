@@ -13,13 +13,15 @@ namespace SmartCowork.Services.Booking.Services
         private readonly ILogger<BookingService> _logger;
         private readonly IMapper _mapper;
         private readonly IRabbitMQProducer _rabbitMQProducer;
+        private readonly ISpaceService _spaceService;
 
-        public BookingService(IBookingRepository bookingRepository, IMapper mapper, ILogger<BookingService> logger,IRabbitMQProducer rabbitMQProducer)
+        public BookingService(IBookingRepository bookingRepository, IMapper mapper, ILogger<BookingService> logger,IRabbitMQProducer rabbitMQProducer, ISpaceService spaceService)
         {
             _bookingRepository = bookingRepository;
             _mapper = mapper;
             _logger = logger;
             _rabbitMQProducer= rabbitMQProducer;
+            _spaceService = spaceService;
         }
 
         public async Task<IEnumerable<Models.Booking>> GetAllBookingsAsync()
@@ -44,7 +46,6 @@ namespace SmartCowork.Services.Booking.Services
 
         public async Task<Models.Booking> CreateBookingAsync(Models.Booking booking)
         {
-            // Vérifier la disponibilité
             if (!await CheckSpaceAvailabilityAsync(booking.SpaceId, booking.StartTime, booking.EndTime))
             {
                 throw new InvalidOperationException("Space is not available for the selected time period");
@@ -52,6 +53,9 @@ namespace SmartCowork.Services.Booking.Services
 
             // D'abord, créer la réservation en BDD pour obtenir l'ID
             var createdBooking = await _bookingRepository.CreateAsync(booking);
+
+            // Récupérer les détails de l'espace
+            var spaceDetails = await _spaceService.GetSpaceDetailsAsync(createdBooking.SpaceId);
 
             // Ensuite, publier le message avec l'ID généré
             try
@@ -66,16 +70,19 @@ namespace SmartCowork.Services.Booking.Services
                         SpaceId = createdBooking.SpaceId,
                         StartDateTime = createdBooking.StartTime,
                         EndDateTime = createdBooking.EndTime,
-
-                    });
-
+                        SpaceName = spaceDetails?.Name ?? "Espace non spécifié",
+                        HourlyRate = spaceDetails?.HourlyRate ?? 0M,
+                        Purpose = createdBooking.Purpose ?? "Non spécifié",
+                        AttendeesCount = createdBooking.AttendeesCount ?? 0,
+                        Status = createdBooking.Status.ToString(),
+                        CreatedAt = createdBooking.CreatedAt
+                    }) ;
                 _logger.LogInformation($"Message de création de réservation publié pour la réservation {createdBooking.Id}");
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Erreur lors de la publication: {ex.Message}");
             }
-
             return createdBooking;
         }
 
@@ -83,10 +90,44 @@ namespace SmartCowork.Services.Booking.Services
         {
             await _bookingRepository.UpdateAsync(booking);
         }
-
         public async Task DeleteBookingAsync(Guid id)
         {
-            await _bookingRepository.DeleteAsync(id);
+            // Récupérer d'abord la réservation pour avoir toutes les informations nécessaires
+            var booking = await _bookingRepository.GetByIdAsync(id);
+            if (booking == null)
+            {
+                _logger.LogWarning($"Tentative de suppression d'une réservation inexistante: {id}");
+                return;
+            }
+
+            // Changer le statut de la réservation à "Cancelled" au lieu de la supprimer physiquement
+            booking.Status = BookingStatus.Cancelled;
+            booking.CancellationReason = "Annulé par l'utilisateur";
+            await _bookingRepository.UpdateAsync(booking);
+
+            // Publier l'événement d'annulation
+            try
+            {
+                _rabbitMQProducer.PublishMessage(
+                    "booking_events",
+                    "booking.cancelled",
+                    new BookingCancelledMessage
+                    {
+                        BookingId = booking.Id,
+                        UserId = booking.UserId,
+                        SpaceId = booking.SpaceId,
+                        StartDateTime = booking.StartTime,
+                        EndDateTime = booking.EndTime,
+                        CancellationTime = DateTime.UtcNow,
+                        CancellationReason = "Annulé par l'utilisateur"
+                    });
+
+                _logger.LogInformation($"Message d'annulation de réservation publié pour la réservation {booking.Id}");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Erreur lors de la publication du message d'annulation: {ex.Message}");
+            }
         }
 
         public async Task<bool> CheckSpaceAvailabilityAsync(Guid spaceId, DateTime startTime, DateTime endTime)

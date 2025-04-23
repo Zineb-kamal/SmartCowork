@@ -46,5 +46,5 @@ This project implements a microservices architecture with the following componen
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/your-username/SmartCowork.git
+git clone https://github.com/Zineb-kamal/SmartCowork
 cd SmartCowork

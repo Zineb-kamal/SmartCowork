@@ -12,6 +12,8 @@
         public DateTime EndDateTime { get; set; }
         public string Purpose { get; set; }
         public int AttendeesCount { get; set; }
+        public string Status { get; set; }
+        public DateTime CreatedAt { get; set; }
     }
 
     public class BookingUpdatedMessage

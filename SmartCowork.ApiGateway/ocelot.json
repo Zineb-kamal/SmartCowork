@@ -53,6 +53,23 @@
       "SwaggerKey": "billing"
     },
     {
+      "DownstreamPathTemplate": "/api/invoice/{id}/pdf",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5058
+        }
+      ],
+      "UpstreamPathTemplate": "/api/invoice/{id}/pdf",
+      "UpstreamHttpMethod": [ "GET" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "SwaggerKey": "billing"
+    },
+    {
       "DownstreamPathTemplate": "/api/payment",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [

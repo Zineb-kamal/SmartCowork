@@ -100,4 +100,27 @@ public class InvoiceController : ControllerBase
 
         return NoContent();
     }
+    [HttpGet("{id}/pdf")]
+    [Authorize]
+    public async Task<IActionResult> GetInvoicePdf(Guid id)
+    {
+        var invoice = await _billingService.GetInvoiceByIdAsync(id);
+        if (invoice == null)
+            return NotFound();
+
+        // Vérifier si l'utilisateur peut accéder à cette facture
+        var currentUserId = User.FindFirst("sub")?.Value;
+        if (invoice.UserId.ToString() != currentUserId && !User.IsInRole("Admin"))
+        {
+            return Forbid();
+        }
+
+        // Générer le PDF
+        var pdfBytes = await _billingService.GenerateInvoicePdfAsync(id);
+        if (pdfBytes == null || pdfBytes.Length == 0)
+            return NotFound("Impossible de générer le PDF");
+
+        // Retourner le PDF comme un fichier téléchargeable
+        return File(pdfBytes, "application/pdf", $"facture-{id}.pdf");
+    }
 }

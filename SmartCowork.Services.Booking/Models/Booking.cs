@@ -10,6 +10,8 @@ namespace SmartCowork.Services.Booking.Models
         public DateTime EndTime { get; set; }
         public decimal TotalPrice { get; set; }
         public BookingStatus Status { get; set; }
+        public string? Purpose { get; set; } 
+        public int? AttendeesCount { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
         public string? CancellationReason { get; internal set; }

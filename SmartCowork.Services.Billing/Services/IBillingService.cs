@@ -33,5 +33,7 @@ namespace SmartCowork.Services.Billing.Services
         Task ProcessBookingUpdatedAsync(BookingUpdatedMessage message);
         Task ProcessBookingCancelledAsync(BookingMessages message);
         Task ProcessBookingCompletedAsync(BookingCompletedMessage message);
+
+        Task<byte[]> GenerateInvoicePdfAsync(Guid invoiceId);
     }
 }

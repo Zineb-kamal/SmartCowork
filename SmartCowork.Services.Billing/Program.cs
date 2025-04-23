@@ -42,10 +42,12 @@ builder.Services.AddAuthorization();
 // Register Repositories
 builder.Services.AddScoped<IInvoiceRepository, InvoiceRepository>();
 builder.Services.AddScoped<IBillingService, BillingService>();
+builder.Services.AddHttpClient<IUserService, UserService>();
 
 // Add RabbitMQ
 builder.Services.AddRabbitMQProducer();
 builder.Services.AddHostedService<BillingRabbitMQConsumer>();
+builder.Services.AddHttpContextAccessor();
 
 // Add Health Checks
 builder.Services.AddHealthChecks()

@@ -16,6 +16,9 @@ namespace SmartCowork.Services.Booking.DTOs
 
         [Required]
         public DateTime EndTime { get; set; }
+
+        public string? Purpose { get; set; }
+        public int? AttendeesCount { get; set; } = 0;
     }
 
     public class BookingUpdateDto
