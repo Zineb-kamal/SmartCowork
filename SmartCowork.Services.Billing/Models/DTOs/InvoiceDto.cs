@@ -13,6 +13,10 @@ namespace SmartCowork.Services.Billing.Models.DTOs
         public string Status { get; set; } // Représentation sous forme de chaîne
         public List<InvoiceItemDto> Items { get; set; }
         public List<TransactionDto> Transactions { get; set; }
+        public string UserFirstName { get; set; }
+        public string UserLastName { get; set; }
+        public string UserEmail { get; set; }
+        public string UserFullName { get; set; }
     }
     public class InvoiceItemDto
     {

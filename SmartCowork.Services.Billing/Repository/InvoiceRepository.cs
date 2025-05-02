@@ -142,6 +142,14 @@ namespace SmartCowork.Services.Billing.Repository
                 .Where(i => i.CreatedDate >= startDate && i.CreatedDate <= endDate)
                 .ToListAsync();
         }
+        public async Task<IEnumerable<Invoice>> GetInvoicesByBookingIdAsync(Guid bookingId)
+        {
+            return await _context.Invoices
+                .Include(i => i.Items)
+                .Include(i => i.Transactions)
+                .Where(i => i.Items.Any(item => item.BookingId == bookingId))
+                .ToListAsync();
+        }
 
     }
 }

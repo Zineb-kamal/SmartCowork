@@ -1,6 +1,24 @@
 {
   "Routes": [
+
     // Routes du Billing Service
+    {
+      "DownstreamPathTemplate": "/api/invoice/booking/{bookingId}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5223
+        }
+      ],
+      "UpstreamPathTemplate": "/api/invoice/booking/{bookingId}",
+      "UpstreamHttpMethod": [ "Get" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "SwaggerKey": "billing"
+    },
     {
       "DownstreamPathTemplate": "/api/invoice",
       "DownstreamScheme": "http",
@@ -101,6 +119,34 @@
       "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE", "OPTIONS" ]
     },
     // Routes du Space Service
+    {
+      "DownstreamPathTemplate": "/api/upload/image",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5285
+        }
+      ],
+      "UpstreamPathTemplate": "/api/upload/image",
+      "UpstreamHttpMethod": [ "POST" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/uploads/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5285
+        }
+      ],
+      "UpstreamPathTemplate": "/uploads/{everything}",
+      "UpstreamHttpMethod": [ "GET" ]
+    },
     {
       "DownstreamPathTemplate": "/api/space",
       "DownstreamScheme": "http",

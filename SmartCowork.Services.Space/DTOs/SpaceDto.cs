@@ -21,7 +21,7 @@ namespace SmartCowork.Services.Space.DTOs
 
         [Required]
         public SpaceStatus Status { get; set; }
-
+        public string ImageUrl { get; set; }
         [Required]
         [Range(0, 10000)]
         public decimal PricePerHour { get; set; }
@@ -53,6 +53,7 @@ namespace SmartCowork.Services.Space.DTOs
         public int Capacity { get; set; }
         public SpaceType Type { get; set; }
         public SpaceStatus Status { get; set; }
+        public string ImageUrl { get; set; }
         public decimal PricePerHour { get; set; }
         public decimal PricePerDay { get; set; }
         public decimal PricePerWeek { get; set; }

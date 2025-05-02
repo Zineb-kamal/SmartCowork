@@ -123,4 +123,15 @@ public class InvoiceController : ControllerBase
         // Retourner le PDF comme un fichier téléchargeable
         return File(pdfBytes, "application/pdf", $"facture-{id}.pdf");
     }
+    [HttpGet("booking/{bookingId}")]
+    [Authorize]
+    public async Task<ActionResult<InvoiceDto>> GetByBookingId(Guid bookingId)
+    {
+        var invoices = await _billingService.GetInvoicesByBookingIdAsync(bookingId);
+        if (invoices == null || !invoices.Any())
+            return NotFound();
+
+        // Retourner la facture la plus récente liée à cette réservation
+        return Ok(invoices.OrderByDescending(i => i.CreatedDate).First());
+    }
 }

@@ -20,5 +20,7 @@ namespace SmartCowork.Services.Billing.Repository
         Task<Invoice> FindInvoiceByTransactionIdAsync(Guid transactionId);
         Task<IEnumerable<Invoice>> GetInvoicesByDateRangeAsync(DateTime startDate, DateTime endDate);
 
+        Task<IEnumerable<Invoice>> GetInvoicesByBookingIdAsync(Guid bookingId);
+
     }
 }

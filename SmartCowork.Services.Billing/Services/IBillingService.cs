@@ -35,5 +35,6 @@ namespace SmartCowork.Services.Billing.Services
         Task ProcessBookingCompletedAsync(BookingCompletedMessage message);
 
         Task<byte[]> GenerateInvoicePdfAsync(Guid invoiceId);
+        Task<IEnumerable<InvoiceDto>> GetInvoicesByBookingIdAsync(Guid bookingId);
     }
 }

@@ -55,7 +55,24 @@ namespace SmartCowork.Services.Billing.Services
             if (invoice == null)
                 return null;
 
-            return _mapper.Map<InvoiceDto>(invoice);
+            var invoiceDto = _mapper.Map<InvoiceDto>(invoice);
+
+            // Récupérer les informations utilisateur
+            try
+            {
+                var user = await _userService.GetUserByIdAsync(invoice.UserId);
+                if (user != null)
+                {
+                    invoiceDto.UserFullName = user.FullName;
+                    invoiceDto.UserEmail = user.Email;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning($"Impossible de récupérer les informations utilisateur pour la facture {id}: {ex.Message}");
+            }
+
+            return invoiceDto;
         }
 
         public async Task<InvoiceDto> CreateInvoiceAsync(CreateInvoiceDto createInvoiceDto)
@@ -147,7 +164,11 @@ namespace SmartCowork.Services.Billing.Services
             var overdueInvoices = await _invoiceRepository.GetOverdueInvoicesAsync();
             return _mapper.Map<IEnumerable<InvoiceDto>>(overdueInvoices);
         }
-
+        public async Task<IEnumerable<InvoiceDto>> GetInvoicesByBookingIdAsync(Guid bookingId)
+        {
+            var invoices = await _invoiceRepository.GetInvoicesByBookingIdAsync(bookingId);
+            return _mapper.Map<IEnumerable<InvoiceDto>>(invoices);
+        }
         #endregion
 
         #region Méthodes de paiement avec publication d'événements
@@ -346,33 +367,99 @@ namespace SmartCowork.Services.Billing.Services
 
             try
             {
-                // Calculer la durée en heures
-                var duration = (message.EndDateTime - message.StartDateTime).TotalHours;
-                var totalAmount = (decimal)duration * message.HourlyRate;
+                // Calculer les différentes durées avec précision
+                var durationHours = Math.Max((message.EndDateTime - message.StartDateTime).TotalHours, 0.1); // Minimum 0.1h
+                var durationDays = durationHours / 24;
+                var durationWeeks = durationDays / 7;
+                var durationMonths = durationDays / 30;
+                var durationYears = durationDays / 365;
 
-                // Créer une facture pour cette réservation
+                // Initialiser avec le tarif horaire comme base
+                decimal bestPrice = (decimal)durationHours * message.PricePerHour;
+                string priceUnit = "heures";
+                decimal quantity = (decimal)durationHours;
+                decimal unitPrice = message.PricePerHour;
+
+                // Déterminer le meilleur tarif SEULEMENT si la durée est suffisante
+                if (durationDays >= 1 && message.PricePerDay > 0)
+                {
+                    decimal costByDay = (decimal)Math.Ceiling(durationDays) * message.PricePerDay;
+                    if (costByDay < bestPrice)
+                    {
+                        bestPrice = costByDay;
+                        priceUnit = "jours";
+                        quantity = (decimal)Math.Ceiling(durationDays);
+                        unitPrice = message.PricePerDay;
+                    }
+                }
+
+                if (durationWeeks >= 1 && message.PricePerWeek > 0)
+                {
+                    decimal costByWeek = (decimal)Math.Ceiling(durationWeeks) * message.PricePerWeek;
+                    if (costByWeek < bestPrice)
+                    {
+                        bestPrice = costByWeek;
+                        priceUnit = "semaines";
+                        quantity = (decimal)Math.Ceiling(durationWeeks);
+                        unitPrice = message.PricePerWeek;
+                    }
+                }
+
+                if (durationMonths >= 1 && message.PricePerMonth > 0)
+                {
+                    decimal costByMonth = (decimal)Math.Ceiling(durationMonths) * message.PricePerMonth;
+                    if (costByMonth < bestPrice)
+                    {
+                        bestPrice = costByMonth;
+                        priceUnit = "mois";
+                        quantity = (decimal)Math.Ceiling(durationMonths);
+                        unitPrice = message.PricePerMonth;
+                    }
+                }
+
+                if (durationYears >= 1 && message.PricePerYear > 0)
+                {
+                    decimal costByYear = (decimal)Math.Ceiling(durationYears) * message.PricePerYear;
+                    if (costByYear < bestPrice)
+                    {
+                        bestPrice = costByYear;
+                        priceUnit = "années";
+                        quantity = (decimal)Math.Ceiling(durationYears);
+                        unitPrice = message.PricePerYear;
+                    }
+                }
+
+                // Vérifications pour éviter les valeurs aberrantes
+                if (quantity < 0.01m)
+                {
+                    _logger.LogWarning($"Quantité trop faible ({quantity} {priceUnit}), correction à la valeur minimale");
+                    quantity = 0.01m;
+                    bestPrice = quantity * unitPrice;
+                }
+
+                // Créer une facture avec le tarif optimal
                 var createInvoiceDto = new CreateInvoiceDto
                 {
                     UserId = message.UserId,
-                    DueDate = DateTime.UtcNow.AddDays(30), // Échéance standard à 30 jours
+                    DueDate = DateTime.UtcNow.AddDays(30),
                     Items = new List<CreateInvoiceItemDto>
-                    {
-                        new CreateInvoiceItemDto
-                        {
-                            BookingId = message.BookingId,
-                            Description = $"Réservation de {message.SpaceName ?? "l'espace"} du {message.StartDateTime:g} au {message.EndDateTime:g}",
-                            Quantity = (decimal)duration,
-                            UnitPrice = message.HourlyRate
-                        }
-                    }
+            {
+                new CreateInvoiceItemDto
+                {
+                    BookingId = message.BookingId,
+                    Description = $"Réservation de {message.SpaceName ?? "l'espace"} du {message.StartDateTime:g} au {message.EndDateTime:g} ({Math.Round(quantity, 2)} {priceUnit})",
+                    Quantity = quantity,
+                    UnitPrice = unitPrice
+                }
+            }
                 };
 
                 await CreateInvoiceAsync(createInvoiceDto);
-                _logger.LogInformation($"Facture créée pour la réservation {message.BookingId}");
+                _logger.LogInformation($"Facture créée pour la réservation {message.BookingId} avec le prix: {bestPrice:F2}");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Erreur lors de la création de la facture pour la réservation {message.BookingId}: {ex.Message}");
+                _logger.LogError(ex, $"Erreur lors de la création de la facture: {ex.Message}");
                 throw;
             }
         }
@@ -666,8 +753,8 @@ namespace SmartCowork.Services.Billing.Services
                                     {
                                         table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten2).Padding(5).Text(item.Description);
                                         table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten2).Padding(5).Text(item.Quantity.ToString("0.##") + " h");
-                                        table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten2).Padding(5).Text($"{item.UnitPrice:0.##} €");
-                                        table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten2).Padding(5).Text($"{item.TotalPrice:0.##} €");
+                                        table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten2).Padding(5).Text($"{item.UnitPrice:0.##} MAD");
+                                        table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten2).Padding(5).Text($"{item.TotalPrice:0.##} MAD");
                                     }
                                 }
                                 else
@@ -689,13 +776,13 @@ namespace SmartCowork.Services.Billing.Services
                                 });
 
                                 table.Cell().Text("Total HT:").Bold();
-                                table.Cell().Text($"{invoice.TotalAmount:0.##} €");
+                                table.Cell().Text($"{invoice.TotalAmount:0.##} MAD");
 
                                 table.Cell().Text("TVA (20%):").Bold();
-                                table.Cell().Text($"{invoice.TotalAmount * 0.2m:0.##} €");
+                                table.Cell().Text($"{invoice.TotalAmount * 0.2m:0.##} MAD");
 
                                 table.Cell().Text("Total TTC:").Bold();
-                                table.Cell().Text($"{invoice.TotalAmount * 1.2m:0.##} €").Bold();
+                                table.Cell().Text($"{invoice.TotalAmount * 1.2m:0.##} MAD").Bold();
                             });
 
                             // Instructions de paiement
@@ -721,6 +808,8 @@ namespace SmartCowork.Services.Billing.Services
 
             return pdfBytes;
         }
+        // Dans la méthode GetInvoiceByIdAsync du BillingService
+       
         #endregion
     }
 

@@ -138,4 +138,5 @@ public class BookingController : ControllerBase
         var isAvailable = await _bookingService.CheckSpaceAvailabilityAsync(spaceId, startTime, endTime);
         return Ok(isAvailable);
     }
+
 }

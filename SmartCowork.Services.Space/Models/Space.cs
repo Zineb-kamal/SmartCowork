@@ -10,6 +10,7 @@
         //public string Location { get; set; }
         public SpaceType Type { get; set; }
         public SpaceStatus Status { get; set; }
+        public string ImageUrl { get; set; }
         //public List<string> Amenities { get; set; }
         // Pricing
         public decimal PricePerHour { get; set; }

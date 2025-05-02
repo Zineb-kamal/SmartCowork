@@ -8,6 +8,7 @@ using SmartCowork.Services.Space.Middleware;
 using SmartCowork.Services.Space.Repository;
 using SmartCowork.Services.Space.Services;
 using SmartCowork.Common.Messaging.Extensions;
+using Microsoft.Extensions.FileProviders;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -96,9 +97,21 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(
+        Path.Combine(Directory.GetCurrentDirectory(), "wwwroot")),
+    RequestPath = ""
+});
+var webRootPath = app.Environment.WebRootPath;
+if (string.IsNullOrEmpty(webRootPath))
+{
+    webRootPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+    Directory.CreateDirectory(webRootPath);
+}
 app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
 app.UseHealthChecks("/health");
+
 app.Run();
