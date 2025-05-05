@@ -1,6 +1,116 @@
 {
   "Routes": [
-
+    // Routes pour le service AI
+    {
+      "DownstreamPathTemplate": "/api/recommendation",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5028
+        }
+      ],
+      "UpstreamPathTemplate": "/api/recommendation",
+      "UpstreamHttpMethod": [ "GET", "POST" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "SwaggerKey": "ai"
+    },
+    {
+      "DownstreamPathTemplate": "/api/recommendation/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5028
+        }
+      ],
+      "UpstreamPathTemplate": "/api/recommendation/{everything}",
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "SwaggerKey": "ai"
+    },
+    {
+      "DownstreamPathTemplate": "/api/recommendation/user",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5028
+        }
+      ],
+      "UpstreamPathTemplate": "/api/recommendation/user",
+      "UpstreamHttpMethod": [ "GET" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "SwaggerKey": "ai"
+    },
+    {
+      "DownstreamPathTemplate": "/api/recommendation/trending",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5028
+        }
+      ],
+      "UpstreamPathTemplate": "/api/recommendation/trending",
+      "UpstreamHttpMethod": [ "GET" ],
+      "SwaggerKey": "ai"
+    },
+    {
+      "DownstreamPathTemplate": "/api/recommendation/preferences",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5028
+        }
+      ],
+      "UpstreamPathTemplate": "/api/recommendation/preferences",
+      "UpstreamHttpMethod": [ "GET", "PUT" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "SwaggerKey": "ai"
+    },
+    {
+      "DownstreamPathTemplate": "/api/recommendation/track",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5028
+        }
+      ],
+      "UpstreamPathTemplate": "/api/recommendation/track",
+      "UpstreamHttpMethod": [ "POST" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "SwaggerKey": "ai"
+    },
+    {
+      "DownstreamPathTemplate": "/swagger/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5028
+        }
+      ],
+      "UpstreamPathTemplate": "/swagger/ai/{everything}",
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE", "OPTIONS" ]
+    },
     // Routes du Billing Service
     {
       "DownstreamPathTemplate": "/api/invoice/booking/{bookingId}",
@@ -456,6 +566,16 @@
           "Name": "User API",
           "Version": "v1",
           "Url": "http://user-service:5043/swagger/v1/swagger.json"
+        }
+      ]
+    },
+    {
+      "Key": "ai",
+      "Config": [
+        {
+          "Name": "AI API",
+          "Version": "v1",
+          "Url": "http://localhost:5028/swagger/v1/swagger.json"
         }
       ]
     }
